@@ -1,10 +1,15 @@
 <template>
   <div class="main__wrapper">
     <div class="select__wrapper">
-      <input class="select" />
+      <input
+        class="select"
+        name="fieldSearch"
+        value={searchTerm}
+        oninput={handleFieldSearch}
+      />
     </div>
     <div class="options__wrapper">
-      <template for:each={_filteredFields} for:item="field">
+      <template for:each={_renderedFields} for:item="field">
         <p key={field} class="option" data-option-value={field}>{field}</p>
       </template>
     </div>
