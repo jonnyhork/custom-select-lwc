@@ -6,10 +6,12 @@
     "bugs": "https://github.com/Jonny Hork/custom-select-lwc/issues",
     "dependencies": {
         "compression": "^1.7.4",
+        "debounce": "^1.2.0",
         "express": "^4.17.1",
         "helmet": "^4.2.0"
     },
     "devDependencies": {
+        "@salesforce/ts-types": "^1.4.3",
         "@types/jest": "^26.0.19",
         "eslint": "^7.15.0",
         "husky": "^4.3.6",

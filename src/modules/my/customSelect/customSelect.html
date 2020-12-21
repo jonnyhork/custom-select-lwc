@@ -1,0 +1,12 @@
+<template>
+  <div class="main__wrapper">
+    <div class="select__wrapper">
+      <input class="select" />
+    </div>
+    <div class="options__wrapper">
+      <template for:each={_filteredFields} for:item="field">
+        <p key={field} class="option" data-option-value={field}>{field}</p>
+      </template>
+    </div>
+  </div>
+</template>
