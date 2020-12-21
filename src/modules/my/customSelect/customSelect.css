@@ -1,5 +1,6 @@
 .main__wrapper {
-  padding: 10px;
+  position: relative;
+  padding: var(--padding-main);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -36,13 +37,27 @@
 /* ======== OPTIONS ======== */
 
 .options__wrapper {
+  position: absolute;
+  top: 47px;
   border: 1px solid lightblue;
   border-radius: 4px;
-  width: 100%;
+  width: calc(100% - (var(--padding-main) * 2));
   min-height: 20%;
   max-height: 80%;
+  /* hidden by default */
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 200;
+}
+
+.options--open {
+  visibility: visible;
+  pointer-events: all;
 }
 
 .option {
   padding-left: 5px;
+}
+.option:hover {
+  background-color: #4dd0e130;
 }

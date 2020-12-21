@@ -1,4 +1,9 @@
 <template>
+  <div class="selected-fields">
+    <template for:each={selectedFields} for:item="field">
+      <span key={field}>{field}, </span>
+    </template>
+  </div>
   <div class="main__wrapper">
     <div class="select__wrapper">
       <input
@@ -6,11 +11,19 @@
         name="fieldSearch"
         value={searchTerm}
         oninput={handleFieldSearch}
+        onclick={handleOpen}
       />
     </div>
     <div class="options__wrapper">
       <template for:each={_renderedFields} for:item="field">
-        <p key={field} class="option" data-option-value={field}>{field}</p>
+        <p
+          onclick={handleFieldSelected}
+          key={field}
+          class="option"
+          data-option-value={field}
+        >
+          {field}
+        </p>
       </template>
     </div>
   </div>
