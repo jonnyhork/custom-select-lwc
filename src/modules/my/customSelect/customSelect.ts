@@ -12,7 +12,7 @@ export default class CustomSelect extends LightningElement {
   optionList: HTMLCollection;
   optionListIsOpen = false;
   availableFields: string[] = [];
-  cursorPosition = 0;
+  activeOptionIndex = -1;
 
   getAvailableFields(): string[] {
     return this.allFields.filter((field) => {
@@ -59,7 +59,7 @@ export default class CustomSelect extends LightningElement {
   handleOpenOptions(e) {
     e.preventDefault();
     e.stopPropagation();
-    this.cursorPosition = 0;
+    this.activeOptionIndex = -1;
     this.openOptionsMenu();
     this.filterFields();
   }
@@ -89,49 +89,35 @@ export default class CustomSelect extends LightningElement {
     const key = e.key;
     switch (key) {
       case 'ArrowDown':
-        const firstOption = this.optionsWrapper.firstElementChild;
-        let firstOptionHasHighlight = firstOption.classList.contains(
-          'option--highlight'
-        );
-
-        if (this.optionListIsOpen) {
+        if (this.haveOptionsToNavigate()) {
           this.clearOptionHighlight();
-          // initialize the first element
-          if (this.cursorPosition === 0 && !firstOptionHasHighlight) {
-            this.addOptionHighlight(0);
-            this.searchTerm = this.getCurrentOptionValue();
-            // highlight second element
-          } else if (this.cursorPosition === 0 && firstOptionHasHighlight) {
-            this.cursorPosition = 1;
-            this.addOptionHighlight(this.cursorPosition);
-            this.searchTerm = this.getCurrentOptionValue();
-          } else {
-            // make sure cursor is in range of list
-            this.cursorPosition =
-              this.cursorPosition < this.optionList.length - 1
-                ? ++this.cursorPosition
-                : this.optionList.length - 1;
 
-            this.addOptionHighlight(this.cursorPosition);
-            this.searchTerm = this.getCurrentOptionValue();
-          }
+          this.activeOptionIndex =
+            this.activeOptionIndex < this.optionList.length - 1
+              ? ++this.activeOptionIndex
+              : this.optionList.length - 1;
+
+          this.addOptionHighlight(this.activeOptionIndex);
+          this.searchTerm = this.getCurrentOptionValue();
         }
         break;
       case 'ArrowUp':
-        this.clearOptionHighlight();
-
-        if (this.cursorPosition === 0) {
+        if (this.haveOptionsToNavigate()) {
           this.clearOptionHighlight();
-          this.searchTerm = this.originalSearchTerm;
-          this.fieldSearchBar.focus();
-          break;
-        }
-        // make sure cursor is in range of list
-        this.cursorPosition =
-          this.cursorPosition > 0 ? --this.cursorPosition : 0;
 
-        this.addOptionHighlight(this.cursorPosition);
-        this.searchTerm = this.getCurrentOptionValue();
+          if (this.activeOptionIndex === 0) {
+            this.searchTerm = this.originalSearchTerm;
+            this.fieldSearchBar.focus();
+            this.activeOptionIndex = -1;
+            break;
+          }
+          // make sure cursor is in range of list
+          this.activeOptionIndex =
+            this.activeOptionIndex > 0 ? --this.activeOptionIndex : -1;
+
+          this.addOptionHighlight(this.activeOptionIndex);
+          this.searchTerm = this.getCurrentOptionValue();
+        }
         break;
       case 'Enter':
         // submit selection if searchTerm is a valid field
@@ -143,8 +129,8 @@ export default class CustomSelect extends LightningElement {
   }
 
   clearOptionHighlight() {
-    if (this.optionList[this.cursorPosition]) {
-      this.optionList[this.cursorPosition].classList.remove(
+    if (this.optionList[this.activeOptionIndex]) {
+      this.optionList[this.activeOptionIndex].classList.remove(
         'option--highlight'
       );
     }
@@ -157,9 +143,11 @@ export default class CustomSelect extends LightningElement {
   }
 
   getCurrentOptionValue(): string {
-    return this.optionList[this.cursorPosition]
-      ? this.optionList[this.cursorPosition].getAttribute('data-option-value')
-      : null;
+    return this.optionList[this.activeOptionIndex]
+      ? this.optionList[this.activeOptionIndex].getAttribute(
+          'data-option-value'
+        )
+      : '';
   }
 
   addSelectedField(field: string) {
@@ -181,7 +169,11 @@ export default class CustomSelect extends LightningElement {
     this.handleCloseOptions();
     this.searchTerm = '';
     this.originalSearchTerm = '';
-    this.cursorPosition = 0;
+    this.activeOptionIndex = -1;
+  }
+
+  haveOptionsToNavigate() {
+    return this.optionListIsOpen && this.optionList.length;
   }
 }
 
