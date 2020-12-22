@@ -6,19 +6,19 @@ export default class CustomSelect extends LightningElement {
   @api selectedFields: string[] = []; // selections made from text
   @track _renderedFields: string[] = [];
   searchTerm = '';
+  originalSearchTerm = '';
   fieldSearchBar: HTMLInputElement;
   optionsWrapper: HTMLElement;
   optionList: HTMLCollection;
+  optionListIsOpen = false;
   availableFields: string[] = [];
   cursorPosition = 0;
-  originalSearchTerm = '';
 
   getAvailableFields(): string[] {
     return this.allFields.filter((field) => {
       return !this.selectedFields.includes(field);
     });
   }
-
   // close the options menu when user click outside element
   connectedCallback() {
     document.addEventListener('click', () => {
@@ -48,17 +48,19 @@ export default class CustomSelect extends LightningElement {
 
   handleCloseOptions() {
     this.optionsWrapper.classList.remove('options--open');
+    this.optionListIsOpen = false;
   }
 
   openOptionsMenu() {
     this.optionsWrapper.classList.add('options--open');
+    this.optionListIsOpen = true;
   }
 
   handleOpenOptions(e) {
     e.preventDefault();
     e.stopPropagation();
-    this.openOptionsMenu();
     this.cursorPosition = 0;
+    this.openOptionsMenu();
     this.filterFields();
   }
 
@@ -85,7 +87,6 @@ export default class CustomSelect extends LightningElement {
 
   handleKeyDown(e) {
     const key = e.key;
-
     switch (key) {
       case 'ArrowDown':
         const firstOption = this.optionsWrapper.firstElementChild;
@@ -93,24 +94,27 @@ export default class CustomSelect extends LightningElement {
           'option--highlight'
         );
 
-        this.clearOptionHighlight();
-        // initialize the first element
-        if (this.cursorPosition === 0 && !firstOptionHasHighlight) {
-          this.addOptionHighlight(0);
-          this.searchTerm = this.getCurrentOptionValue();
-          // highlight second element
-        } else if (this.cursorPosition === 0 && firstOptionHasHighlight) {
-          this.cursorPosition = 1;
-          this.addOptionHighlight(this.cursorPosition);
-          this.searchTerm = this.getCurrentOptionValue();
-        } else {
-          // make sure cursor is in range of list
-          this.cursorPosition =
-            this.cursorPosition < this.optionList.length - 1
-              ? ++this.cursorPosition
-              : this.optionList.length - 1;
-          this.addOptionHighlight(this.cursorPosition);
-          this.searchTerm = this.getCurrentOptionValue();
+        if (this.optionListIsOpen) {
+          this.clearOptionHighlight();
+          // initialize the first element
+          if (this.cursorPosition === 0 && !firstOptionHasHighlight) {
+            this.addOptionHighlight(0);
+            this.searchTerm = this.getCurrentOptionValue();
+            // highlight second element
+          } else if (this.cursorPosition === 0 && firstOptionHasHighlight) {
+            this.cursorPosition = 1;
+            this.addOptionHighlight(this.cursorPosition);
+            this.searchTerm = this.getCurrentOptionValue();
+          } else {
+            // make sure cursor is in range of list
+            this.cursorPosition =
+              this.cursorPosition < this.optionList.length - 1
+                ? ++this.cursorPosition
+                : this.optionList.length - 1;
+
+            this.addOptionHighlight(this.cursorPosition);
+            this.searchTerm = this.getCurrentOptionValue();
+          }
         }
         break;
       case 'ArrowUp':
@@ -127,23 +131,19 @@ export default class CustomSelect extends LightningElement {
           this.cursorPosition > 0 ? --this.cursorPosition : 0;
 
         this.addOptionHighlight(this.cursorPosition);
+        this.searchTerm = this.getCurrentOptionValue();
+        break;
       case 'Enter':
         // submit selection if searchTerm is a valid field
         this.addSelectedField(this.getCurrentOptionValue());
-
+        break;
       default:
         break;
     }
-
-    // arrow down, move focus to list of options
-    // enter select the highlighted option,
-    // may need to count key press to get index in list of options
-    // arrow up, if first option, move focus to search
   }
 
   clearOptionHighlight() {
     if (this.optionList[this.cursorPosition]) {
-      console.log('removed highlight on pos', this.cursorPosition);
       this.optionList[this.cursorPosition].classList.remove(
         'option--highlight'
       );
@@ -159,7 +159,7 @@ export default class CustomSelect extends LightningElement {
   getCurrentOptionValue(): string {
     return this.optionList[this.cursorPosition]
       ? this.optionList[this.cursorPosition].getAttribute('data-option-value')
-      : undefined;
+      : null;
   }
 
   addSelectedField(field: string) {
@@ -177,8 +177,11 @@ export default class CustomSelect extends LightningElement {
   }
 
   resetSearchBar() {
+    this.clearOptionHighlight();
     this.handleCloseOptions();
     this.searchTerm = '';
+    this.originalSearchTerm = '';
+    this.cursorPosition = 0;
   }
 }
 
