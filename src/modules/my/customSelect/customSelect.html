@@ -1,23 +1,26 @@
 <template>
   <div class="selected-fields">
+    <span><strong>Selected Fields: </strong></span>
     <template for:each={selectedFields} for:item="field">
-      <span key={field}>{field}, </span>
+      <span key={field}>{field} </span>
     </template>
   </div>
   <div class="main__wrapper">
     <div class="select__wrapper">
       <input
         class="select"
-        name="fieldSearch"
+        name="fieldSearchBar"
         value={searchTerm}
         oninput={handleFieldSearch}
-        onclick={handleOpen}
+        onclick={handleOpenOptions}
+        onkeydown={handleKeyDown}
       />
     </div>
     <div class="options__wrapper">
       <template for:each={_renderedFields} for:item="field">
         <p
-          onclick={handleFieldSelected}
+          tabindex="0"
+          onclick={handleOptionClickSelection}
           key={field}
           class="option"
           data-option-value={field}
@@ -26,5 +29,11 @@
         </p>
       </template>
     </div>
+    <input
+      class="misc-input"
+      type="text"
+      placeholder="some other element"
+      disabled
+    />
   </div>
 </template>
