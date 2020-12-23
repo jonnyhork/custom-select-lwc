@@ -1,6 +1,6 @@
 # custom-select-lwc
 
-Here will be some information about the app.
+![Silky Selector Demo Gif](./assets/Silky_Selector_Demo.gif)
 
 ## How to start?
 
