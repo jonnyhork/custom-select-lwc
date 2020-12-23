@@ -165,6 +165,11 @@ export default class CustomSelect extends LightningElement {
   addOptionHighlight(position: number) {
     if (this.optionList[position]) {
       this.optionList[position].classList.add('option--highlight');
+      this.optionList[position].scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+        inline: 'nearest'
+      });
     }
   }
   /* 
