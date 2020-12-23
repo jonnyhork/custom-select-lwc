@@ -93,11 +93,19 @@ export default class CustomSelect extends LightningElement {
   }
 
   handleKeyDown(e) {
-    const key = e.key;
+    const key: string = e.key;
+    const activeOption: Element = this.optionList[this.activeOptionIndex];
+
     switch (key) {
       case 'ArrowDown':
         if (this.haveOptionsToNavigate()) {
           this.clearActiveHighlight();
+
+          if (activeOption === this.optionsWrapper.lastElementChild) {
+            this.searchTerm = this.originalUserInput;
+            this.activeOptionIndex = -1;
+            break;
+          }
 
           this.activeOptionIndex =
             this.activeOptionIndex < this.optionList.length - 1
@@ -118,7 +126,7 @@ export default class CustomSelect extends LightningElement {
             and the user hits 'ArrowUp',
             restore original input.
           */
-          if (this.activeOptionIndex === 0) {
+          if (activeOption === this.optionsWrapper.firstElementChild) {
             this.searchTerm = this.originalUserInput;
             this.activeOptionIndex = -1;
             break;
@@ -131,6 +139,7 @@ export default class CustomSelect extends LightningElement {
             this.addOptionHighlight(this.activeOptionIndex);
             this.searchTerm = this.getCurrentOptionValue();
           } else {
+            // if cursor is in searchbar, move to the bottom of the list
             this.activeOptionIndex = this.optionList.length - 1;
             this.addOptionHighlight(this.activeOptionIndex);
             this.searchTerm = this.getCurrentOptionValue();
