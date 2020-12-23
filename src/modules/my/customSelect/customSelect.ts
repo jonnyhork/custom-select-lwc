@@ -14,6 +14,10 @@ export default class CustomSelect extends LightningElement {
   availableFields: string[] = []; // all possible fields minus the selected fields.
   activeOptionIndex = -1;
 
+  get hasSearchTerm() {
+    return !!this.searchTerm;
+  }
+
   getAvailableFields(): string[] {
     return this.allFields.filter((field) => {
       return !this.selectedFields.includes(field);
@@ -77,6 +81,12 @@ export default class CustomSelect extends LightningElement {
     this.searchTerm = e.target.value;
     this.originalUserInput = this.searchTerm;
     this.filterFieldsBySearchTerm();
+  }
+
+  handleClearSearch(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.resetSearchBar();
   }
 
   handleOptionClickSelection(e) {

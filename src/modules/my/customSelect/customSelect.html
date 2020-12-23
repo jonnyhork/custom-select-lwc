@@ -10,11 +10,21 @@
       <input
         class="select"
         name="fieldSearchBar"
+        placeholder="Search fields..."
         value={searchTerm}
         oninput={handleFieldSearch}
         onclick={handleOpenOptions}
         onkeydown={handleKeyDown}
       />
+      <template if:true={hasSearchTerm}>
+        <div
+          role="button"
+          onclick={handleClearSearch}
+          class="select__clear-search"
+        >
+          &#10005;
+        </div>
+      </template>
     </div>
     <div class="options__wrapper">
       <template for:each={_renderedFields} for:item="field">

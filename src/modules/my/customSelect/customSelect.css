@@ -11,6 +11,8 @@
 }
 /* ======= SELECT ======= */
 .select__wrapper {
+  display: flex;
+  justify-content: space-between;
   position: relative;
   width: 100%;
   border: 1px solid lightblue;
@@ -21,6 +23,7 @@
   content: '🔍';
   font-size: 1.5em;
   top: 5px;
+  padding-left: 5px;
 }
 
 .select {
@@ -32,6 +35,13 @@
 }
 .select:focus {
   outline: none;
+}
+
+.select__clear-search {
+  font-size: 1.5em;
+  align-self: center;
+  padding-right: 5px;
+  cursor: pointer;
 }
 
 /* ======== OPTIONS ======== */
@@ -47,12 +57,15 @@
   overflow-y: scroll;
   /* hidden by default */
   visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s;
   pointer-events: none;
   z-index: 200;
   background-color: white;
 }
 
 .options--open {
+  opacity: 1;
   visibility: visible;
   pointer-events: all;
 }
