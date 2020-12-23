@@ -4,14 +4,14 @@ import { mockMDT } from '../model';
 export default class CustomSelect extends LightningElement {
   @api allFields: string[] = mockMDT.fields.Account; // all possible fields
   @api selectedFields: string[] = []; // selections made from text
-  @track _renderedFields: string[] = [];
-  searchTerm = '';
-  originalSearchTerm = '';
+  @track _renderedFields: string[] = []; // the fields that are rendered for the user to select
+  searchTerm = ''; // the value of the input el
+  originalUserInput = ''; // any charaters originally typed by the user
   fieldSearchBar: HTMLInputElement;
   optionsWrapper: HTMLElement;
   optionList: HTMLCollection;
   optionListIsOpen = false;
-  availableFields: string[] = [];
+  availableFields: string[] = []; // all possible fields minus the selected fields.
   activeOptionIndex = -1;
 
   getAvailableFields(): string[] {
@@ -34,8 +34,8 @@ export default class CustomSelect extends LightningElement {
     this.availableFields = this.getAvailableFields();
     this.optionList = this.optionsWrapper.children;
   }
-
-  filterFields() {
+  // get list of fields that match user input
+  filterFieldsBySearchTerm() {
     if (this.searchTerm) {
       const filteredFields = this.availableFields.filter((field) => {
         return field.toLowerCase().includes(this.searchTerm.toLowerCase());
@@ -47,6 +47,8 @@ export default class CustomSelect extends LightningElement {
   }
 
   handleCloseOptions() {
+    this.clearActiveHighlight();
+    this.activeOptionIndex = -1;
     this.optionsWrapper.classList.remove('options--open');
     this.optionListIsOpen = false;
   }
@@ -59,17 +61,22 @@ export default class CustomSelect extends LightningElement {
   handleOpenOptions(e) {
     e.preventDefault();
     e.stopPropagation();
-    this.activeOptionIndex = -1;
     this.openOptionsMenu();
-    this.filterFields();
+    this.filterFieldsBySearchTerm();
   }
-
+  // respond to changes in input value, typing.
   handleFieldSearch(e) {
     e.preventDefault();
     this.openOptionsMenu();
+    // if the user deletes the text
+    if (!e.target.value) {
+      this.resetSearchBar();
+      return;
+    }
+
     this.searchTerm = e.target.value;
-    this.originalSearchTerm = this.searchTerm;
-    this.filterFields();
+    this.originalUserInput = this.searchTerm;
+    this.filterFieldsBySearchTerm();
   }
 
   handleOptionClickSelection(e) {
@@ -90,7 +97,7 @@ export default class CustomSelect extends LightningElement {
     switch (key) {
       case 'ArrowDown':
         if (this.haveOptionsToNavigate()) {
-          this.clearOptionHighlight();
+          this.clearActiveHighlight();
 
           this.activeOptionIndex =
             this.activeOptionIndex < this.optionList.length - 1
@@ -103,32 +110,51 @@ export default class CustomSelect extends LightningElement {
         break;
       case 'ArrowUp':
         if (this.haveOptionsToNavigate()) {
-          this.clearOptionHighlight();
-
+          // this will keep the input cursor at the end of the text.
+          e.preventDefault();
+          this.clearActiveHighlight();
+          /* 
+            if active option is the first one,
+            and the user hits 'ArrowUp',
+            restore original input.
+          */
           if (this.activeOptionIndex === 0) {
-            this.searchTerm = this.originalSearchTerm;
-            this.fieldSearchBar.focus();
+            this.searchTerm = this.originalUserInput;
             this.activeOptionIndex = -1;
             break;
           }
-          // make sure cursor is in range of list
+          // make sure the index is in range
           this.activeOptionIndex =
             this.activeOptionIndex > 0 ? --this.activeOptionIndex : -1;
 
-          this.addOptionHighlight(this.activeOptionIndex);
-          this.searchTerm = this.getCurrentOptionValue();
+          if (this.activeOptionIndex >= 0) {
+            this.addOptionHighlight(this.activeOptionIndex);
+            this.searchTerm = this.getCurrentOptionValue();
+          } else {
+            this.activeOptionIndex = this.optionList.length - 1;
+            this.addOptionHighlight(this.activeOptionIndex);
+            this.searchTerm = this.getCurrentOptionValue();
+          }
         }
         break;
       case 'Enter':
-        // submit selection if searchTerm is a valid field
-        this.addSelectedField(this.getCurrentOptionValue());
+        // if there is an active option
+        if (this.activeOptionIndex > -1) {
+          this.addSelectedField(this.getCurrentOptionValue());
+        } else {
+          // if the user hits enter in the search bar
+          this.addSelectedField(this.searchTerm);
+        }
+        break;
+      case 'Escape':
+        this.handleCloseOptions();
         break;
       default:
         break;
     }
   }
 
-  clearOptionHighlight() {
+  clearActiveHighlight() {
     if (this.optionList[this.activeOptionIndex]) {
       this.optionList[this.activeOptionIndex].classList.remove(
         'option--highlight'
@@ -141,7 +167,10 @@ export default class CustomSelect extends LightningElement {
       this.optionList[position].classList.add('option--highlight');
     }
   }
-
+  /* 
+  get the value of an option when the user selects 
+  from the list with 'Enter'
+*/
   getCurrentOptionValue(): string {
     return this.optionList[this.activeOptionIndex]
       ? this.optionList[this.activeOptionIndex].getAttribute(
@@ -149,15 +178,22 @@ export default class CustomSelect extends LightningElement {
         )
       : '';
   }
-
-  addSelectedField(field: string) {
+  /* 
+  I need to ba able to add a selection when:
+    1. The user types in the search and hits 'Enter'
+    2. Clicks on an option in the list
+    3. The user navigates up/down the list and hits 'Enter'
+*/
+  addSelectedField(fieldName: string = this.searchTerm) {
     // Only add valid fields, need to be case insensitive.
-    const isValidField: string[] = this.getAvailableFields().filter((field) => {
-      return field.toLowerCase().includes(this.searchTerm.toLowerCase());
-    });
+    const validFieldMatch: string[] = this.getAvailableFields().filter(
+      (field) => {
+        return field.toLowerCase() === fieldName.toLowerCase();
+      }
+    );
 
-    if (isValidField.length) {
-      this.selectedFields = [...this.selectedFields, field];
+    if (validFieldMatch.length) {
+      this.selectedFields = [...this.selectedFields, validFieldMatch[0]];
       this.resetSearchBar();
     } else {
       console.error('that is not a valid field');
@@ -165,10 +201,10 @@ export default class CustomSelect extends LightningElement {
   }
 
   resetSearchBar() {
-    this.clearOptionHighlight();
+    this.clearActiveHighlight();
     this.handleCloseOptions();
     this.searchTerm = '';
-    this.originalSearchTerm = '';
+    this.originalUserInput = '';
     this.activeOptionIndex = -1;
   }
 
@@ -176,7 +212,3 @@ export default class CustomSelect extends LightningElement {
     return this.optionListIsOpen && this.optionList.length;
   }
 }
-
-/*NOTE:
-  - should the options div and input be separate elements?
-*/
